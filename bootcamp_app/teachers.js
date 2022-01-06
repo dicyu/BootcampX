@@ -8,18 +8,22 @@ const pool = new Pool({
 });
 
 const dateOfAssist = process.argv[2];
+const values = [`${dateOfAssist}`];
 
-pool.query(`
-SELECT DISTINCT teachers.name as teacher, cohorts.name as cohort
+const queryString = `
+SELECT DISTINCT teachers.name AS teacher, cohorts.name AS cohort
 FROM teachers
-JOIN assistance_requests ON teacher_id = teachers.id
-JOIN students ON student_id = students.id
-JOIN cohorts ON cohort_id = cohorts.id
-WHERE cohorts.name = '${dateOfAssist || 'JUL02'}'
+JOIN assistance_requests ON teachers.id = teacher_id
+JOIN students ON students.id = student_id
+JOIN cohorts ON cohorts.id = cohort_id
+WHERE cohorts.name = $1
 ORDER BY teacher;
-`)
+`;
+
+pool.query(queryString, values)
 .then(res => {
-  res.rows.forEach(row => {
-    console.log(`${row.cohort}: ${row.teacher}`);
+  res.rows.forEach(user => {
+    console.log(`${user.cohort}: ${user.teacher}`);
   })
-});
+})
+.catch(err => console.error('query error', err.stack));
